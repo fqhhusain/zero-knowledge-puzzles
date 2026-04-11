@@ -6,7 +6,7 @@
   "scripts": {
     "test": "mocha",
     "docker:build": "docker build -t zk-puzzles .",
-    "docker:run": "if [ -z $(docker images -q zk-puzzles) ]; then npm run docker:build; fi && docker run -v $(pwd):/app zk-puzzles",
+    "docker:run": "if [ -z $(docker images -q zk-puzzles) ]; then npm run docker:build; fi && docker run --rm -v $(pwd):/app -v /app/node_modules zk-puzzles",
     "docker:test": "npm run docker:run test --"
   },
   "author": "Rareskills",

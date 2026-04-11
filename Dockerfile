@@ -1,5 +1,5 @@
 # 1. Build install circom
-FROM rust:1.70.0 as circom-installer
+FROM rust:1.85.0 AS circom-installer
 
 WORKDIR /circom
 
@@ -11,8 +11,8 @@ RUN git checkout tags/v2.1.9
 RUN cargo build --release
 RUN cargo install --path circom
 
-# Use Node.js image based on Debian Buster for compatibility
-FROM node:18-buster
+# Use Node.js image based on Debian Bookworm for compatibility with the Circom binary
+FROM node:18-bookworm
 
 # Set the PATH explicitly to include standard directories
 ENV PATH="/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
