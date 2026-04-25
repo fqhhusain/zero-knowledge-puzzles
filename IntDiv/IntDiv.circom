@@ -10,12 +10,22 @@ include "../node_modules/circomlib/circuits/comparators.circom";
 // `/` is modular division
 // `%` is integer modulus
 
+include "../node_modules/circomlib/circuits/comparators.circom";
+
+
 template IntDiv(n) {
     signal input numerator;
     signal input denominator;
     signal input quotient;
     signal input remainder;
-
+    component zero = IsZero();
+    zero.in <== denominator;
+    zero.out === 0;
+    component kurang = LessThan(252);
+    kurang.in[0] <== remainder;
+    kurang.in[1] <== denominator;
+    kurang.out === 1;
+    numerator === denominator * quotient + remainder;
 }
 
 component main = IntDiv(252);
