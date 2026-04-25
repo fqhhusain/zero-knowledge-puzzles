@@ -9,7 +9,14 @@ template IntDivOut(n) {
     signal input numerator;
     signal input denominator;
     signal output out;
-
+    signal remainder;
+    component zero = IsZero();
+    zero.in <== denominator;
+    zero.out === 0;
+    signal quotient <-- numerator  \  denominator;
+    remainder <-- numerator % denominator;
+    numerator === quotient * denominator + remainder; 
+    out <== quotient;
 }
 
 component main = IntDivOut(252);

@@ -21,8 +21,22 @@ include "../node_modules/circomlib/circuits/comparators.circom";
 // finite field. You should validate integer
 // square roots, not modular square roots
 
+include "../node_modules/circomlib/circuits/comparators.circom";
+
+
 template IntSqrt(n) {
     signal input in[2];
+    signal check1 <== (in[0] - 1) * (in[0] - 1);
+    signal check2 <== (in[0] + 1) * (in[0] + 1);
+    component kurang = LessThan(252);
+    kurang.in[0] <== check1;
+    kurang.in[1] <== in[1];
+    component lebih = GreaterThan(252);
+    lebih.in[0] <== check2;
+    lebih.in[1] <== in[1];
+    lebih.out === 1;
+    kurang.out === 1;
+
 
 }
 
