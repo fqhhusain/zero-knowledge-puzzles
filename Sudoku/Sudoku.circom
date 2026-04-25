@@ -1,6 +1,8 @@
 pragma circom 2.1.4;
 
 include "../node_modules/circomlib/circuits/comparators.circom";
+include "../Range/Range.circom";
+
 
 
 /*
@@ -22,7 +24,7 @@ include "../node_modules/circomlib/circuits/comparators.circom";
 
 template Sudoku () {
     // Question Setup 
-    signal input  question[16];
+    signal input question[16];
     signal input solution[16];
     signal output out;
     

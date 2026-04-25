@@ -1,9 +1,8 @@
 const chai = require('chai');
-const { wasm } = require('circom_tester');
 const path = require("path");
 const fs = require("fs");
+const { execSync } = require("child_process");
 const {groth16} = require("snarkjs");
-const {ethers} = require("hardhat");
 const {expect} = require("chai");
 
 
@@ -28,33 +27,36 @@ function unstringifyBigInts(o) {
 }
 
 describe("Should verify correctly  ", function (){
-    this.timeout(100000);
+    this.timeout(300000);
+
+    const compileDir = path.join(__dirname, "../Compile");
+    const wasmPath = path.join(compileDir, "Mul_js/Mul.wasm");
+    const zkeyPath = path.join(compileDir, "Mul_0001.zkey");
+    const vkPath = path.join(compileDir, "verification_key.json");
+
+    before(async () => {
+        if (fs.existsSync(wasmPath) && fs.existsSync(zkeyPath) && fs.existsSync(vkPath)) {
+            return;
+        }
+
+        // Generate proving artifacts only when they do not exist.
+        execSync("circom Mul.circom --r1cs --wasm --sym -o .", { cwd: compileDir, stdio: "inherit" });
+        execSync("snarkjs powersoftau new bn128 12 pot12_0000.ptau -v", { cwd: compileDir, stdio: "inherit" });
+        execSync("snarkjs powersoftau contribute pot12_0000.ptau pot12_0001.ptau --name='First contribution' -e='zk-puzzles' -v", { cwd: compileDir, stdio: "inherit" });
+        execSync("snarkjs powersoftau prepare phase2 pot12_0001.ptau pot12_final.ptau -v", { cwd: compileDir, stdio: "inherit" });
+        execSync("snarkjs groth16 setup Mul.r1cs pot12_final.ptau Mul_0000.zkey", { cwd: compileDir, stdio: "inherit" });
+        execSync("snarkjs zkey contribute Mul_0000.zkey Mul_0001.zkey --name='1st Contributor Name' -e='zk-puzzles' -v", { cwd: compileDir, stdio: "inherit" });
+        execSync("snarkjs zkey export verificationkey Mul_0001.zkey verification_key.json", { cwd: compileDir, stdio: "inherit" });
+    });
 
     it("Should compile the circuit and generate the proofs and verify them ", async()=> {
-
-        const verifier = await ethers.getContractFactory("Verifier");
-        const verifierContract = await verifier.deploy();
-        await verifierContract.deployed();
         const { proof, publicSignals } = await groth16.fullProve(
             { "a": "23", "b": "2" }, 
-            path.join(__dirname,"../Compile","Mul_js/Mul.wasm"), 
-            path.join(__dirname,"../Compile","Mul_0001.zkey"));
+            wasmPath,
+            zkeyPath);
            
-        const editedPublicSignal = unstringifyBigInts(publicSignals);
-
-        const editedProof = unstringifyBigInts(proof);
-
-        const calldata = await groth16.exportSolidityCallData(editedProof,editedPublicSignal);
-
-
-        const argv = calldata.replace(/["[\]\s]/g, "").split(',').map(x => BigInt(x).toString());
-
-        const a = [argv[0], argv[1]];
-        const b = [[argv[2], argv[3]], [argv[4], argv[5]]];
-        const c = [argv[6], argv[7]];
-        const input = argv.slice(8);
-
-        const check = await verifierContract.verifyProof(a,b,c,input);
+        const vKey = unstringifyBigInts(JSON.parse(fs.readFileSync(vkPath, "utf8")));
+        const check = await groth16.verify(vKey, publicSignals, proof);
         expect(check).to.be.true;
     })
 })
