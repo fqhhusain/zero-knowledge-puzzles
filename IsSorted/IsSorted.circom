@@ -5,8 +5,18 @@ include "../node_modules/circomlib/circuits/comparators.circom";
 // sorted. Sorted means the values are non decreasing starting
 // at index 0. The circuit should not have an output.
 
+include "../node_modules/circomlib/circuits/comparators.circom";
+
 template IsSorted() {
     signal input in[4];
+
+    component comp[3];
+    for (var i = 0; i< 3;i++){
+        comp[i] = LessEqThan(10);
+        comp[i].in[0] <== in[i];
+        comp[i].in[1] <== in[i+1];
+        comp[i].out === 1;
+    }
 
 }
 

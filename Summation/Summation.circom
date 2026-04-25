@@ -6,6 +6,11 @@ template Summation(n) {
 
     // constrain sum === in[0] + in[1] + in[2] + ... + in[n-1]
     // this should work for any n
+    var y = 0;
+    for (var i = 0;i< n;i++){
+        y += in[i];
+    }
+    sum === y;
 }
 
 component main = Summation(8);
